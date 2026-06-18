@@ -43,130 +43,137 @@ class MainActivity : AppCompatActivity() {
     // ── UI ───────────────────────────────────────────────────────────────
 
     private fun buildUI(): View {
-        val scroll = ScrollView(this).apply {
-            setBackgroundColor(Color.parseColor("#0F172A"))
-        }
-        val root = column().apply {
-            setPadding(dp(20), dp(24), dp(20), dp(40))
-        }
+        val scroll = ScrollView(this)
+        scroll.setBackgroundColor(Color.parseColor("#0F172A"))
+
+        val root = vbox()
+        root.setPadding(dp(20), dp(24), dp(20), dp(40))
         scroll.addView(root)
 
         // Header
-        root.addView(textView("📱 MoMo SMS Forwarder", 21f, Color.WHITE, bold = true))
-        root.addView(textView("Forwards MoMo SMS to your OpenClaw agent", 13f, Color.parseColor("#64748B")))
+        root.addView(text("📱 MoMo SMS Forwarder", 21f, Color.WHITE, bold = true))
+        root.addView(text("Forwards MoMo SMS to your OpenClaw agent", 13f, Color.parseColor("#64748B")))
         root.addView(gap(20))
 
-        // Last forward status pill
-        lastFwdText = textView("No messages forwarded yet", 12f, Color.parseColor("#22C55E"))
+        // Last forward badge
+        lastFwdText = text("No messages forwarded yet", 12f, Color.parseColor("#22C55E"))
         root.addView(lastFwdText)
         root.addView(gap(16))
 
-        // Enable card
-        val card0 = card()
-        val row0 = row()
-        val col0 = column().apply { layoutParams = LinearLayout.LayoutParams(0, -2, 1f) }
-        col0.addView(textView("Forwarding Active", 15f, Color.WHITE, bold = true))
-        col0.addView(textView("Turn on to start forwarding SMS", 12f, Color.parseColor("#64748B")))
-        row0.addView(col0)
+        // Enable toggle card
+        val toggleCard = card()
+        val toggleRow = hbox()
+
+        val toggleLabels = vbox()
+        toggleLabels.setLayoutParams(LinearLayout.LayoutParams(0, -2, 1f))
+        toggleLabels.addView(text("Forwarding Active", 15f, Color.WHITE, bold = true))
+        toggleLabels.addView(text("Turn on to start forwarding SMS", 12f, Color.parseColor("#64748B")))
+        toggleRow.addView(toggleLabels)
+
         enableSwitch = SwitchCompat(this)
-        row0.addView(enableSwitch)
-        card0.addView(row0)
-        root.addView(card0)
+        toggleRow.addView(enableSwitch)
+        toggleCard.addView(toggleRow)
+        root.addView(toggleCard)
         root.addView(gap(12))
 
-        // URL card
-        val card1 = card()
-        card1.addView(fieldLabel("WEBHOOK URL"))
+        // Webhook URL card
+        val urlCard = card()
+        urlCard.addView(fieldLabel("WEBHOOK URL"))
         urlInput = input("https://xxxx.ngrok-free.app/webhook/sms/your-agent-id")
-        card1.addView(urlInput)
-        root.addView(card1)
+        urlCard.addView(urlInput)
+        root.addView(urlCard)
         root.addView(gap(12))
 
-        // Key card
-        val card2 = card()
-        card2.addView(fieldLabel("WEBHOOK KEY  (leave blank if not set)"))
+        // Webhook key card
+        val keyCard = card()
+        keyCard.addView(fieldLabel("WEBHOOK KEY  (leave blank if not set)"))
         keyInput = input("your-secret-key")
-        card2.addView(keyInput)
-        root.addView(card2)
+        keyCard.addView(keyInput)
+        root.addView(keyCard)
         root.addView(gap(12))
 
         // Filters card
-        val card3 = card()
-        card3.addView(fieldLabel("SENDER FILTERS"))
-        card3.addView(textView("Only forward SMS from these senders", 12f, Color.parseColor("#64748B")))
-        card3.addView(gap(10))
-        filtersContainer = column()
-        card3.addView(filtersContainer)
-        card3.addView(gap(8))
+        val filterCard = card()
+        filterCard.addView(fieldLabel("SENDER FILTERS"))
+        filterCard.addView(text("Only forward SMS from these senders", 12f, Color.parseColor("#64748B")))
+        filterCard.addView(gap(10))
+        filtersContainer = vbox()
+        filterCard.addView(filtersContainer)
+        filterCard.addView(gap(8))
 
-        val addRow = row()
-        filterInput = input("e.g. MobileMoney, 1016, MTN").apply {
-            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
-        }
+        val addRow = hbox()
+        filterInput = input("e.g. MobileMoney, 1016, MTN")
+        filterInput.setLayoutParams(LinearLayout.LayoutParams(0, -2, 1f))
         addRow.addView(filterInput)
         addRow.addView(gap(8))
-        addRow.addView(Button(this).apply {
-            text = "+  Add"
-            setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor("#6366F1"))
-            setPadding(dp(14), 0, dp(14), 0)
-            setOnClickListener {
-                val t = filterInput.text.toString().trim()
-                if (t.isNotEmpty()) { addChip(t); filterInput.setText("") }
-            }
-        })
-        card3.addView(addRow)
-        root.addView(card3)
+
+        val addBtn = Button(this)
+        addBtn.text = "+  Add"
+        addBtn.setTextColor(Color.WHITE)
+        addBtn.setBackgroundColor(Color.parseColor("#6366F1"))
+        addBtn.setPadding(dp(14), 0, dp(14), 0)
+        addBtn.setOnClickListener {
+            val t = filterInput.text.toString().trim()
+            if (t.isNotEmpty()) { addChip(t); filterInput.setText("") }
+        }
+        addRow.addView(addBtn)
+        filterCard.addView(addRow)
+        root.addView(filterCard)
         root.addView(gap(24))
 
         // Save button
-        root.addView(Button(this).apply {
-            text = "💾   Save Settings"
-            textSize = 15f
-            setTextColor(Color.WHITE)
-            setBackgroundColor(Color.parseColor("#22C55E"))
-            setPadding(0, dp(14), 0, dp(14))
-            layoutParams = fullWidth(bottom = 10)
-            setOnClickListener { save() }
-        })
+        val saveBtn = Button(this)
+        saveBtn.text = "💾   Save Settings"
+        saveBtn.textSize = 15f
+        saveBtn.setTextColor(Color.WHITE)
+        saveBtn.setBackgroundColor(Color.parseColor("#22C55E"))
+        saveBtn.setPadding(0, dp(14), 0, dp(14))
+        saveBtn.setLayoutParams(wrapWidth(bottom = 10))
+        saveBtn.setOnClickListener { save() }
+        root.addView(saveBtn)
 
         // Test button
-        root.addView(Button(this).apply {
-            text = "🧪   Send Test"
-            textSize = 15f
-            setTextColor(Color.parseColor("#A5B4FC"))
-            setBackgroundColor(Color.parseColor("#1E1B4B"))
-            setPadding(0, dp(14), 0, dp(14))
-            layoutParams = fullWidth(bottom = 10)
-            setOnClickListener { sendTest() }
-        })
+        val testBtn = Button(this)
+        testBtn.text = "🧪   Send Test"
+        testBtn.textSize = 15f
+        testBtn.setTextColor(Color.parseColor("#A5B4FC"))
+        testBtn.setBackgroundColor(Color.parseColor("#1E1B4B"))
+        testBtn.setPadding(0, dp(14), 0, dp(14))
+        testBtn.setLayoutParams(wrapWidth(bottom = 10))
+        testBtn.setOnClickListener { sendTest() }
+        root.addView(testBtn)
 
-        statusText = textView("", 13f, Color.parseColor("#64748B"))
+        statusText = text("", 13f, Color.parseColor("#64748B"))
         root.addView(statusText)
 
         return scroll
     }
 
-    private fun addChip(text: String) {
-        val row = row().apply {
-            tag = text
-            setBackgroundColor(Color.parseColor("#1E293B"))
-            setPadding(dp(12), dp(8), dp(8), dp(8))
-            layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(6)
-            }
-        }
-        row.addView(textView("✓  $text", 14f, Color.parseColor("#22C55E")).apply {
-            layoutParams = LinearLayout.LayoutParams(0, -2, 1f)
-        })
-        row.addView(Button(this).apply {
-            text = "✕"
-            textSize = 13f
-            setTextColor(Color.parseColor("#EF4444"))
-            setBackgroundColor(Color.TRANSPARENT)
-            setOnClickListener { filtersContainer.removeView(row) }
-        })
-        filtersContainer.addView(row)
+    private fun addChip(label: String) {
+        val chipRow = hbox()
+        chipRow.tag = label
+        chipRow.setBackgroundColor(Color.parseColor("#1E293B"))
+        chipRow.setPadding(dp(12), dp(8), dp(8), dp(8))
+        val chipParams = LinearLayout.LayoutParams(-1, -2)
+        chipParams.bottomMargin = dp(6)
+        chipRow.setLayoutParams(chipParams)
+
+        val chipText = TextView(this)
+        chipText.text = "✓  $label"
+        chipText.textSize = 14f
+        chipText.setTextColor(Color.parseColor("#22C55E"))
+        chipText.setLayoutParams(LinearLayout.LayoutParams(0, -2, 1f))
+        chipRow.addView(chipText)
+
+        val chipBtn = Button(this)
+        chipBtn.text = "✕"
+        chipBtn.textSize = 13f
+        chipBtn.setTextColor(Color.parseColor("#EF4444"))
+        chipBtn.setBackgroundColor(Color.TRANSPARENT)
+        chipBtn.setOnClickListener { filtersContainer.removeView(chipRow) }
+        chipRow.addView(chipBtn)
+
+        filtersContainer.addView(chipRow)
     }
 
     private fun getFilters() = (0 until filtersContainer.childCount)
@@ -214,13 +221,12 @@ class MainActivity : AppCompatActivity() {
         val last = prefs.getLong("last_forward", 0L)
         if (last == 0L) return
         val diff = (System.currentTimeMillis() - last) / 1000
-        val label = when {
+        lastFwdText.text = "Last forwarded: " + when {
             diff < 60    -> "${diff}s ago"
             diff < 3600  -> "${diff / 60}m ago"
             diff < 86400 -> "${diff / 3600}h ago"
             else -> SimpleDateFormat("dd MMM HH:mm", Locale.getDefault()).format(Date(last))
         }
-        lastFwdText.text = "Last forwarded: $label"
     }
 
     private fun status(msg: String, hex: String) {
@@ -237,53 +243,70 @@ class MainActivity : AppCompatActivity() {
 
     // ── View helpers ──────────────────────────────────────────────────────
 
-    private fun column() = LinearLayout(this).apply {
-        orientation = LinearLayout.VERTICAL
-        layoutParams = LinearLayout.LayoutParams(-1, -2)
+    private fun vbox(): LinearLayout {
+        val ll = LinearLayout(this)
+        ll.orientation = LinearLayout.VERTICAL
+        ll.setLayoutParams(LinearLayout.LayoutParams(-1, -2))
+        return ll
     }
 
-    private fun row() = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        layoutParams = LinearLayout.LayoutParams(-1, -2)
+    private fun hbox(): LinearLayout {
+        val ll = LinearLayout(this)
+        ll.orientation = LinearLayout.HORIZONTAL
+        ll.gravity = Gravity.CENTER_VERTICAL
+        ll.setLayoutParams(LinearLayout.LayoutParams(-1, -2))
+        return ll
     }
 
-    private fun card() = column().apply {
-        setBackgroundColor(Color.parseColor("#1E293B"))
-        setPadding(dp(16), dp(14), dp(16), dp(14))
+    private fun card(): LinearLayout {
+        val ll = vbox()
+        ll.setBackgroundColor(Color.parseColor("#1E293B"))
+        ll.setPadding(dp(16), dp(14), dp(16), dp(14))
+        return ll
     }
 
-    private fun gap(sizeDp: Int) = View(this).apply {
-        layoutParams = LinearLayout.LayoutParams(-1, dp(sizeDp))
+    private fun gap(sizeDp: Int): View {
+        val v = View(this)
+        v.setLayoutParams(LinearLayout.LayoutParams(-1, dp(sizeDp)))
+        return v
     }
 
-    private fun textView(text: String, size: Float, color: Int, bold: Boolean = false) =
-        TextView(this).apply {
-            this.text = text
-            textSize = size
-            setTextColor(color)
-            if (bold) setTypeface(null, Typeface.BOLD)
-            layoutParams = LinearLayout.LayoutParams(-1, -2)
-        }
-
-    private fun fieldLabel(text: String) = textView(text, 10f, Color.parseColor("#64748B")).apply {
-        setTypeface(null, Typeface.BOLD)
-        letterSpacing = 0.1f
-        layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(6) }
+    private fun text(str: String, size: Float, color: Int, bold: Boolean = false): TextView {
+        val tv = TextView(this)
+        tv.text = str
+        tv.textSize = size
+        tv.setTextColor(color)
+        if (bold) tv.setTypeface(null, Typeface.BOLD)
+        tv.setLayoutParams(LinearLayout.LayoutParams(-1, -2))
+        return tv
     }
 
-    private fun input(hint: String) = EditText(this).apply {
-        this.hint = hint
-        setHintTextColor(Color.parseColor("#334155"))
-        setTextColor(Color.parseColor("#E2E8F0"))
-        setBackgroundColor(Color.parseColor("#0F172A"))
-        setPadding(dp(10), dp(10), dp(10), dp(10))
-        textSize = 13f
-        layoutParams = LinearLayout.LayoutParams(-1, -2)
+    private fun fieldLabel(str: String): TextView {
+        val tv = text(str, 10f, Color.parseColor("#64748B"))
+        tv.setTypeface(null, Typeface.BOLD)
+        tv.letterSpacing = 0.1f
+        val p = LinearLayout.LayoutParams(-1, -2)
+        p.bottomMargin = dp(6)
+        tv.setLayoutParams(p)
+        return tv
     }
 
-    private fun fullWidth(bottom: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply {
-        bottomMargin = dp(bottom)
+    private fun input(hint: String): EditText {
+        val et = EditText(this)
+        et.hint = hint
+        et.setHintTextColor(Color.parseColor("#334155"))
+        et.setTextColor(Color.parseColor("#E2E8F0"))
+        et.setBackgroundColor(Color.parseColor("#0F172A"))
+        et.setPadding(dp(10), dp(10), dp(10), dp(10))
+        et.textSize = 13f
+        et.setLayoutParams(LinearLayout.LayoutParams(-1, -2))
+        return et
+    }
+
+    private fun wrapWidth(bottom: Int = 0): LinearLayout.LayoutParams {
+        val p = LinearLayout.LayoutParams(-1, -2)
+        p.bottomMargin = dp(bottom)
+        return p
     }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
