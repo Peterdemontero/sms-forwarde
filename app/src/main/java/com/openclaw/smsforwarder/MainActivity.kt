@@ -207,8 +207,9 @@ class MainActivity : AppCompatActivity() {
         status("Sending test...", "#64748B")
         WebhookSender.send(
             url, key,
-            "You have received GHS 5.00 from 0244123456 MobileMoney on 18-06-2025 at 10:30 AM. " +
-            "New balance: GHS 105.00. Financial Transaction Id TEST123456."
+            "Payment received for GHS 5.00 from TEST ACCOUNT  Current Balance: GHS 105.00 . " +
+            "Available Balance: GHS 105.00. Reference: TEST ACCOUNT,0244123456,1 from VODAFONE. " +
+            "Transaction ID: TEST000000. TRANSACTION FEE: 0.00"
         ) { ok ->
             runOnUiThread {
                 if (ok) status("✓ Test sent — check your SMS Logs tab", "#22C55E")
