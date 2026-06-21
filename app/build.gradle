@@ -15,11 +15,28 @@ android {
         versionName "1.0"
     }
 
-    buildTypes {
+    signingConfigs {
         release {
-            minifyEnabled false
+            // Values injected by GitHub Actions via environment variables.
+            // For local release builds, set these in ~/.gradle/gradle.properties.
+            storeFile     file(System.getenv("KEYSTORE_PATH") ?: "keystore.jks")
+            storePassword System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias      System.getenv("KEY_ALIAS") ?: ""
+            keyPassword   System.getenv("KEY_PASSWORD") ?: ""
         }
     }
+
+    buildTypes {
+        debug {
+            // No suffix — keeps same package ID as release so APK upgrades in place
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -32,4 +49,5 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
 }

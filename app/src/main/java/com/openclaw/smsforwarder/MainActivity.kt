@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var filterInput: EditText
     private lateinit var statusText: TextView
     private lateinit var lastFwdText: TextView
+    private lateinit var queueText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,11 +34,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(buildUI())
         loadSettings()
         requestSmsPermissions()
+        // Flush any SMS that failed while the app was closed
+        WebhookSyncWorker.enqueue(this)
     }
 
     override fun onResume() {
         super.onResume()
         refreshLastForward()
+        refreshQueueBadge()
+        WebhookSyncWorker.enqueue(this)
     }
 
     // ── UI ───────────────────────────────────────────────────────────────
@@ -58,6 +63,10 @@ class MainActivity : AppCompatActivity() {
         // Last forward badge
         lastFwdText = text("No messages forwarded yet", 12f, Color.parseColor("#22C55E"))
         root.addView(lastFwdText)
+
+        // Offline queue badge
+        queueText = text("", 12f, Color.parseColor("#F59E0B"))
+        root.addView(queueText)
         root.addView(gap(16))
 
         // Enable toggle card
@@ -94,15 +103,48 @@ class MainActivity : AppCompatActivity() {
 
         // Filters card
         val filterCard = card()
-        filterCard.addView(fieldLabel("SENDER FILTERS"))
-        filterCard.addView(text("Only forward SMS from these senders", 12f, Color.parseColor("#64748B")))
+        filterCard.addView(fieldLabel("SENDER ID FILTERS"))
+        filterCard.addView(text("Forward SMS only from these sender IDs", 12f, Color.parseColor("#64748B")))
         filterCard.addView(gap(10))
+
+        // Quick-add preset buttons for common Ghana MoMo providers
+        filterCard.addView(fieldLabel("QUICK ADD"))
+        val presetRow1 = hbox()
+        val presetRow2 = hbox()
+        listOf(
+            "MobileMoney" to "#1E3A5F",  // MTN MoMo
+            "1016"        to "#1E3A5F",  // MTN shortcode
+            "VodaCash"    to "#2D1B69",  // Vodafone Cash
+            "AirtelTigo"  to "#2D1B69",  // AirtelTigo Money
+            "AT Money"    to "#1A3D2B",  // AirtelTigo alt
+            "GhIPSS"      to "#1A3D2B",  // GhIPSS transfers
+        ).forEachIndexed { i, (label, color) ->
+            val btn = Button(this)
+            btn.text = "+ $label"
+            btn.textSize = 11f
+            btn.setTextColor(Color.parseColor("#CBD5E1"))
+            btn.setBackgroundColor(Color.parseColor(color))
+            val lp = LinearLayout.LayoutParams(0, -2, 1f)
+            lp.marginEnd = dp(4)
+            btn.setLayoutParams(lp)
+            btn.setPadding(dp(4), dp(6), dp(4), dp(6))
+            btn.setOnClickListener { addChip(label) }
+            if (i < 3) presetRow1.addView(btn) else presetRow2.addView(btn)
+        }
+        filterCard.addView(presetRow1)
+        filterCard.addView(gap(4))
+        filterCard.addView(presetRow2)
+        filterCard.addView(gap(10))
+
+        // Active filter chips
+        filterCard.addView(fieldLabel("ACTIVE FILTERS"))
         filtersContainer = vbox()
         filterCard.addView(filtersContainer)
         filterCard.addView(gap(8))
 
+        // Custom sender ID input
         val addRow = hbox()
-        filterInput = input("e.g. MobileMoney, 1016, MTN")
+        filterInput = input("Custom sender ID...")
         filterInput.setLayoutParams(LinearLayout.LayoutParams(0, -2, 1f))
         addRow.addView(filterInput)
         addRow.addView(gap(8))
@@ -228,6 +270,11 @@ class MainActivity : AppCompatActivity() {
             diff < 86400 -> "${diff / 3600}h ago"
             else -> SimpleDateFormat("dd MMM HH:mm", Locale.getDefault()).format(Date(last))
         }
+    }
+
+    private fun refreshQueueBadge() {
+        val n = PendingQueue.size(this)
+        queueText.text = if (n > 0) "⏳ $n SMS queued — will retry when online" else ""
     }
 
     private fun status(msg: String, hex: String) {
