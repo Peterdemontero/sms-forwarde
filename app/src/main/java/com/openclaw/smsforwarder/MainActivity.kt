@@ -36,6 +36,8 @@ class MainActivity : AppCompatActivity() {
         requestSmsPermissions()
         // Flush any SMS that failed while the app was closed
         WebhookSyncWorker.enqueue(this)
+        // Schedule the 15-minute background sync (persists until app is uninstalled)
+        WebhookSyncWorker.schedulePeriodicSync(this)
     }
 
     override fun onResume() {
@@ -114,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         listOf(
             "MobileMoney" to "#1E3A5F",  // MTN MoMo
             "1016"        to "#1E3A5F",  // MTN shortcode
-            "VodaCash"    to "#2D1B69",  // Vodafone Cash
+            "T-Cash"      to "#2D1B69",  // Telecel Cash (formerly Vodafone Cash)
             "AirtelTigo"  to "#2D1B69",  // AirtelTigo Money
             "AT Money"    to "#1A3D2B",  // AirtelTigo alt
             "GhIPSS"      to "#1A3D2B",  // GhIPSS transfers
